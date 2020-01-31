@@ -2,7 +2,7 @@ import urllib.request
 from proxy import Proxy
 
 class RotatingProxy():
-    def __init__(self, entropy=0.3):
+    def __init__(self, entropy=20):
         self.working_proxy = ''
         ###Utilize a heap representation
         self.proxy_list = []
@@ -52,7 +52,7 @@ class RotatingProxy():
 
     def getRawHTML(self,url):
         success=False
-        for proxy in self.proxy_list.keys()[:]:
+        for index,proxy in enumerate(self.proxy_list):
             proxy.generateHeader() 
             req = urllib.request.Request(
                 url = url,
@@ -72,20 +72,25 @@ class RotatingProxy():
                 mybytes = endpoint.read()
                 endpoint.close()
                 print('Able to open ' + proxy.ip,flush=True)
+                self.proxy_list[index].incrementCount()
+                _sift_up(self.proxy_list, index)
+
                 self.working_proxy = proxy.ip
                 success=True
-                time.sleep(random.randrange(entropy))
+                time.sleep(random.randrange(self.entropy))
                 proxy_list[proxy] += 1
                 break
             except Exception as e:
                 success=False
-                if proxy in proxy_list and proxy_list[proxy] == 0:
-                    del proxy_list[proxy]
+                self.proxy_list[index].decrementCount()
+                if self.proxy_list[index].count <= 0:
+                    del self.proxy_list[index]
                 else:
-                    proxy_list[proxy] -= 1
+                    _sift_down(self.proxy_list,index)
+
                 print(e ,flush=True)
                 self.working_proxy = ''
-                time.sleep(random.randrange(entropy))
+                time.sleep(random.randrange(self.entropy))
         #endpoint = request.get(url) #mybytes = endpoint.content
         return mybytes
 
