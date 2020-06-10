@@ -3,7 +3,7 @@ from proxy import Proxy
 import random, time, os
 
 class RotatingProxy():
-    def __init__(self, entropy=1, proxy_list=None):
+    def __init__(self, timeout=1, proxy_list=None, perserve_state=True):
         ###Utilize a heap representation
         self.proxy_heap= []
         self.proxy_size = 0 
@@ -11,7 +11,7 @@ class RotatingProxy():
         self.generateProxyList(proxy_list)
 
         ### optional declarations
-        self.entropy = entropy
+        self.timeout=timeout 
 
     def generateProxyList(self,proxy_list):
         basedir = os.path.abspath(os.path.dirname(__file__))
@@ -30,6 +30,7 @@ class RotatingProxy():
         _swap(self.proxy_heap, len(self) - 1, 0)
         element = self.proxy_heap.pop()
         _sift_down(self.proxy_heap, 0)
+        self.proxy_size -= 1
         return element
     
     def peekHeap(self):
@@ -50,8 +51,15 @@ class RotatingProxy():
     ### heap, and heapify accordingly
     ### 
 
-    def getRawHTML(self,url):
+    def heap_gen(self):
         for index,proxy in enumerate(self.proxy_heap):
+            yield index,proxy
+
+    def getRawHTML(self,url):
+        for index,proxy in self.heap_gen():
+            if self.proxy_size <= 0:
+                raise IndexError("No ip's work")
+
             print(index,proxy)
             ### Build the proxy headers and http headers
             proxy.generateHeader() 
@@ -69,14 +77,12 @@ class RotatingProxy():
             ### attempt to read the page.
             try:
                 endpoint = opener.open(req)
-                #endpoint = urllib.request.urlopen(req) 
                 mybytes = endpoint.read()
                 endpoint.close()
                 print('Able to open ' + proxy.ip,flush=True)
                 self.proxy_heap[index].incrementCount()
                 _sift_up(self.proxy_heap, index)
-                time.sleep(random.randrange(self.entropy))
-                self.printHeap()
+                time.sleep(random.randrange(self.timeout))
                 return mybytes
             except Exception as e:
                 print('Not able to open ' + proxy.ip,flush=True)
@@ -86,8 +92,9 @@ class RotatingProxy():
                 else:
                     _sift_down(self.proxy_heap,index)
                 print(e ,flush=True)
-                self.printHeap()
-                time.sleep(random.randrange(self.entropy))
+                if self.proxy_size <= 0:
+                    raise IndexError("No ip's work")
+                time.sleep(random.randrange(self.timeout))
         return None 
 
 ### heap functions
