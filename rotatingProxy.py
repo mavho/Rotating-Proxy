@@ -1,45 +1,45 @@
 import urllib.request
 from proxy import Proxy
+import random, time, os
 
 class RotatingProxy():
-    def __init__(self, entropy=20):
-        self.working_proxy = ''
+    def __init__(self, entropy=1, proxy_list=None):
         ###Utilize a heap representation
-        self.proxy_list = []
+        self.proxy_heap= []
         self.proxy_size = 0 
 
-        #self.generateProxyList(self.proxy_list)
+        self.generateProxyList(proxy_list)
 
         ### optional declarations
         self.entropy = entropy
 
-    def generateProxyList(self):
-        fobj = open('proxy_list.txt', 'r')
-        count = 0
+    def generateProxyList(self,proxy_list):
+        basedir = os.path.abspath(os.path.dirname(__file__))
+        fobj = open(basedir + '/' + proxy_list, 'r')
         for line in fobj:
-            count += 1
+            self.proxy_size += 1
             proxy = Proxy(line)
-            proxy.count = count
+            proxy.count = 1 
             self.pushToHeap(proxy)
 
     def pushToHeap(self, value):
-        self.proxy_list.append(value)
-        _sift_up(self.proxy_list, len(self) - 1)
+        self.proxy_heap.append(value)
+        _sift_up(self.proxy_heap, len(self) - 1)
 
     def popHeap(self):
-        _swap(self.proxy_list, len(self) - 1, 0)
-        element = self.proxy_list.pop()
-        _sift_down(self.proxy_list, 0)
+        _swap(self.proxy_heap, len(self) - 1, 0)
+        element = self.proxy_heap.pop()
+        _sift_down(self.proxy_heap, 0)
         return element
     
     def peekHeap(self):
-        return self.proxy_list[0] if len(self.proxy_list) != 0 else None
+        return self.proxy_heap[0] if len(self.proxy_heap) != 0 else None
 
     def __len__(self):
-        return len(self.proxy_list)
+        return len(self.proxy_heap)
 
     def printHeap(self, index=1, indent=0):
-        print("\t" * indent, f"{self.proxy_list[index - 1].ip + ' ' +  str(self.proxy_list[index-1].count)}")
+        print("\t" * indent, f"{self.proxy_heap[index - 1].ip + ' ' +  str(self.proxy_heap[index-1].count)}")
         left, right = 2 * index, 2 * index + 1
         if left <= len(self):
             self.printHeap(left, indent=indent + 1)
@@ -51,8 +51,9 @@ class RotatingProxy():
     ### 
 
     def getRawHTML(self,url):
-        success=False
-        for index,proxy in enumerate(self.proxy_list):
+        for index,proxy in enumerate(self.proxy_heap):
+            print(index,proxy)
+            ### Build the proxy headers and http headers
             proxy.generateHeader() 
             req = urllib.request.Request(
                 url = url,
@@ -60,39 +61,34 @@ class RotatingProxy():
                 headers = proxy.header,
             )
             authinfo = urllib.request.HTTPBasicAuthHandler()
-            if self.working_proxy is not '':
-                proxy_support = urllib.request.ProxyHandler({'http': self.working_proxy})
-            else:
-                proxy_support = urllib.request.ProxyHandler({'http': proxy.ip})
+
+            proxy_support = urllib.request.ProxyHandler({'http': proxy.ip})
 
             opener = urllib.request.build_opener(proxy_support,authinfo,urllib.request.CacheFTPHandler)
+
+            ### attempt to read the page.
             try:
                 endpoint = opener.open(req)
                 #endpoint = urllib.request.urlopen(req) 
                 mybytes = endpoint.read()
                 endpoint.close()
                 print('Able to open ' + proxy.ip,flush=True)
-                self.proxy_list[index].incrementCount()
-                _sift_up(self.proxy_list, index)
-
-                self.working_proxy = proxy.ip
-                success=True
+                self.proxy_heap[index].incrementCount()
+                _sift_up(self.proxy_heap, index)
                 time.sleep(random.randrange(self.entropy))
-                proxy_list[proxy] += 1
-                break
+                self.printHeap()
+                return mybytes
             except Exception as e:
-                success=False
-                self.proxy_list[index].decrementCount()
-                if self.proxy_list[index].count <= 0:
-                    del self.proxy_list[index]
+                print('Not able to open ' + proxy.ip,flush=True)
+                self.proxy_heap[index].decrementCount()
+                if self.proxy_heap[index].count <= 0:
+                    self.popHeap()
                 else:
-                    _sift_down(self.proxy_list,index)
-
+                    _sift_down(self.proxy_heap,index)
                 print(e ,flush=True)
-                self.working_proxy = ''
+                self.printHeap()
                 time.sleep(random.randrange(self.entropy))
-        #endpoint = request.get(url) #mybytes = endpoint.content
-        return mybytes
+        return None 
 
 ### heap functions
 def _swap(L, i, j):
@@ -125,5 +121,3 @@ def _sift_down(heap, index):
     if heap[child_index].count > heap[index].count:
         _swap(heap, child_index, index)
         _sift_down(heap, child_index)
-
-
