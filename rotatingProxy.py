@@ -9,7 +9,9 @@ class RotatingProxy():
         self.proxy_heap = HeapArr() 
         self.proxy_size = 0 
 
-        self.generateProxyList(proxy_list)
+        self.proxy_list = proxy_list
+        if self.proxy_list is not None:
+            self.generateProxyList(proxy_list)
 
         ### optional declarations
         self.timeout=timeout 
@@ -29,6 +31,13 @@ class RotatingProxy():
     ### heap, and heapify accordingly
     ### 
     def getRawHTML(self,url):
+        ### If a proxy list isn't specified, try a simple urlopen.
+        if self.proxy_list is None:
+            with urllib.request.urlopen(url) as response:
+                mybytes = response.read()
+
+            return mybytes
+
         for index,proxy in self.proxy_heap.heap_gen():
             if len(self.proxy_heap)<= 0:
                 raise IndexError("No ip's work")
