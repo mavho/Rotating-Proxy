@@ -1,12 +1,12 @@
 import urllib.request
-from proxy import Proxy
-from heap import HeapArr,_sift_up,_sift_down
+from rotatingProxy.proxy import Proxy 
+import rotatingProxy.heap as HA
 import random, time, os
 
 class RotatingProxy():
     def __init__(self, timeout=1, proxy_list=None, perserve_state=True):
         ###Utilize a heap representation
-        self.proxy_heap = HeapArr() 
+        self.proxy_heap = HA.HeapArr() 
         self.proxy_size = 0 
 
         self.proxy_list = proxy_list
@@ -16,10 +16,8 @@ class RotatingProxy():
         ### optional declarations
         self.timeout=timeout 
 
-    def generateProxyList(self,proxy_list):
-        basedir = os.path.abspath(os.path.dirname(__file__))
-
-        with open(f"{basedir}/{proxy_list}",'r') as fobj:
+    def generateProxyList(self,proxy_list_path):
+        with open(proxy_list_path,'r') as fobj:
             for line in fobj:
                 self.proxy_size += 1
                 proxy = Proxy(line)
@@ -63,7 +61,7 @@ class RotatingProxy():
                 endpoint.close()
                 print('Able to open ' + proxy.ip,flush=True)
                 self.proxy_heap[index].incrementCount()
-                _sift_up(self.proxy_heap, index)
+                HA._sift_up(self.proxy_heap, index)
                 return mybytes
             except Exception as e:
                 print('Not able to open ' + proxy.ip,flush=True)
@@ -71,7 +69,7 @@ class RotatingProxy():
                 if self.proxy_heap[index].count <= 0:
                     self.proxy_heap.popHeap()
                 else:
-                    _sift_down(self.proxy_heap,index)
+                    HA._sift_down(self.proxy_heap,index)
                 print(e ,flush=True)
                 if self.proxy_size <= 0:
                     raise IndexError("No ip's work")
