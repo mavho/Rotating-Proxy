@@ -17,7 +17,6 @@ class HeapArr():
         _swap(self.arr, len(self) - 1, 0)
         element = self.arr.pop()
         _sift_down(self.arr, 0)
-        self.proxy_size -= 1
         return element
     
     def peekHeap(self):
