@@ -5,13 +5,13 @@ Example run:
 from rotatingProxy import RotatingProxy
 
 ### initiliaze the proxy list
-rprox = RotatingProxy(proxy_list='proxy_list.txt')
+```rprox = RotatingProxy(proxy_list='proxy_list.txt')```
 
 Calling this function will initialize the Proxy with the specified proxy_list.
 You can initialize the class without a proxy list, and it'll still work.
 
 ### Requests
-html = await rprox._make_request("some_sitestring.")
+```html = await rprox._make_request("some_sitestring.")```
 html is the html of the site.
 
 
