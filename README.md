@@ -4,19 +4,19 @@ Some site is blocking you from stealing their data? Hopefully this module can fi
 Example run:
 from rotatingProxy import RotatingProxy
 
-rprox = RotatingProxy()
-
 ### initiliaze the proxy list
-rprox.generateProxyList()
+rprox = RotatingProxy(proxy_list='proxy_list.txt')
 
-bytes = rprox.getRawHTML('some url')
+Calling this function will initialize the Proxy with the specified proxy_list.
+You can initialize the class without a proxy list, and it'll still work.
 
+### Requests
+html = await rprox._make_request("some_sitestring.")
+html is the html of the site.
+
+
+### Proxy List format
+Each line has 1 IP:Port format.
 
 Use it in successive calls, heap state is stored. Proxies that are more successfull will be
 used more often.
-
-
-WIP:
-    More user agents.
-    Error Handling.
-    request headers.
