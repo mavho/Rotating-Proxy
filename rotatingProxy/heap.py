@@ -1,4 +1,4 @@
-class HeapArr():
+class MaxHeap():
     def __init__(self):
         ###Utilize a heap representation
         self.arr = []

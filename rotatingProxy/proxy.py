@@ -2,7 +2,7 @@ import random
 
 class Proxy():
     def __init__(self,ip):
-        self.count = 0
+        self.count = 1
         self.header = {}
         self.ip = ip 
     
