@@ -2,17 +2,27 @@
 Some site is blocking you from stealing their data? Hopefully this module can fix that!
 
 Example run:
-from rotatingProxy import RotatingProxy
 
-rprox = RotatingProxy()
+```
+async def get_html():
+    """
+    get URL w/o using the proxy
+    """
+    rprox = RotatingProxy(proxy_list='proxy_list.txt')
+    res = []
+    html = await rprox._make_request("http://www.example_site.com")
+    await rprox.session.close()
 
-### initiliaze the proxy list
-rprox.generateProxyList()
+    return html
 
-bytes = rprox.getRawHTML('some url')
+loop = asyncio.get_event_loop()
+html = loop.run_until_complete(get_html())
+```
+
+You can also opt out of the proxy with `rprox.excuse_proxy()`
 
 
-Use it in successive calls, heap state is stored. Proxies that are more successfull will be
+Use it in successive calls, heap state is stored. Proxies that are more successful will be
 used more often.
 
 
