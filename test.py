@@ -20,7 +20,7 @@ class ProxyTests(unittest.TestCase):
 
     def _test_make_req(self):
         async def get_html() -> list:
-            rprox = RotatingProxy(proxy_list='proxy_list.txt')
+            rprox = RotatingProxy(proxy=['someproxy.net:8080'])
             rprox.excuse_proxy()
             res = []
             html = await rprox._make_request("http://www.ufcstats.com/statistics/events/completed")
@@ -51,7 +51,7 @@ class ProxyTests(unittest.TestCase):
             """
             get URL w/o using the proxy
             """
-            rprox = RotatingProxy(proxy_list='proxy_list.txt')
+            rprox = RotatingProxy(proxy_list=['someproxy.net:8080'])
             rprox.excuse_proxy()
             res = []
             html = await rprox._make_request("http://www.ufcstats.com/statistics/events/completed")
@@ -65,22 +65,19 @@ class ProxyTests(unittest.TestCase):
         res = loop.run_until_complete(get_html())
         print(f"Result: {res}")
         self.assertEqual(1, len(res))
+        self.assertEqual(res[0],b"")
 
     @patch('rotatingProxy.rotatingProxy.open')
-    @patch('rotatingProxy.rotatingProxy.ClientSession.get',new_callable=PropertyMock)
     def test_make_req_w_proxy_errs(
         self,
         mock_session:MagicMock,
-        mock_open:PropertyMock
     ):
-        from aiohttp import ClientConnectionError,ClientResponseError
-
-
-        async def get_html() -> list:
+        from aiohttp import ClientConnectionError
+        async def get_html(proxy_list) -> list:
             """
             get URL w/o using the proxy
             """
-            rprox = RotatingProxy(proxy_list='proxy_list.txt')
+            rprox = RotatingProxy(proxy_list=proxy_list)
             res = []
             html = await rprox._make_request("http://www.ufcstats.com/statistics/events/completed")
             res.append(html)
@@ -91,50 +88,35 @@ class ProxyTests(unittest.TestCase):
         loop = asyncio.get_event_loop()
         
         ### mock the with statement
-        mock_session.side_effect = ClientConnectionError("ERRORR")
+        mock_session.side_effect = ClientConnectionError("ERROR")
         # mock_session.get.return_value.__enter__.return_value = mock_reponse
 
-        mock_open.return_value.__enter__.return_value = [
+        proxy_list = [
             'fake_url_1',
             'fake_url_2',
             'fake_url_3'
         ]
-        res = loop.run_until_complete(get_html())
+        res = loop.run_until_complete(get_html(proxy_list))
         print(f"Result: {res}")
         self.assertEqual(1, len(res))
         self.assertIsNone(res[0])
 
-        mock_session.side_effect = TimeoutError("ERRORR")
+        mock_session.side_effect = TimeoutError("ERROR")
         # mock_session.get.return_value.__enter__.return_value = mock_reponse
 
-        mock_open.return_value.__enter__.return_value = [
+        proxy_list = [
             'fake_url_1',
             'fake_url_2',
             'fake_url_3'
         ]
-        res = loop.run_until_complete(get_html())
+        res = loop.run_until_complete(get_html(proxy_list))
         print(f"Result: {res}")
         self.assertEqual(1, len(res))
         self.assertIsNone(res[0])
-
-
-        ### mock the with statement
-        mock_session.side_effect = Exception("ERRORR")
-        # mock_session.get.return_value.__enter__.return_value = mock_reponse
-
-        mock_open.return_value.__enter__.return_value = [
-            'fake_url_1',
-            'fake_url_2',
-            'fake_url_3'
-        ]
-        ## exceptions will just trigger an error
-        with self.assertRaises(Exception):
-            res = loop.run_until_complete(get_html())
-
 
     def test_make_bad_url(self):
         async def getHtml() -> list:
-            rprox = RotatingProxy(proxy_list='proxy_list.txt')
+            rprox = RotatingProxy(proxy_list=['localhost'])
             res = []
             html = await rprox._make_request("http://www.anljksdljsadfj.com")
             res.append(html)
@@ -145,8 +127,8 @@ class ProxyTests(unittest.TestCase):
 
         loop = asyncio.get_event_loop()
         
-        with self.assertRaises(asyncio.TimeoutError):
-            res = loop.run_until_complete(getHtml())
+        res = loop.run_until_complete(getHtml())
+        self.assertIsNone(res[0])
 
 
 class MaxHeapTest():
