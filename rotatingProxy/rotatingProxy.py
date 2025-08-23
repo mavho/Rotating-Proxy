@@ -1,6 +1,6 @@
 import urllib.request
 import asyncio 
-import heapq
+import os
 from typing import List
 
 from aiohttp import (
@@ -36,7 +36,7 @@ class RotatingProxy():
     def __init__(
         self,
         timeout=1,
-        proxy_list:list=None,
+        proxy_list:List[str]=None,
         perserve_state=True,
         loop:asyncio.AbstractEventLoop=None
     ):
@@ -45,8 +45,7 @@ class RotatingProxy():
         self.proxy_size = 0 
 
         self.proxy_list = proxy_list
-        if self.proxy_list is not None:
-            self.generateProxyList(proxy_list)
+        self.generate_proxy_heap()
 
         ### optional declarations
         self.timeout=timeout 
@@ -64,16 +63,16 @@ class RotatingProxy():
         """
         self.proxy_list = None
 
-    def generateProxyList(self,proxy_list_path):
+    def generate_proxy_heap(self):
         """Inserts proxy list text file into priority queue.
 
         Args:
             proxy_list_path (str): Path to proxy file list. Each line must be a url.
         """
-        with open(proxy_list_path,'r') as fobj:
-            for line in fobj:
-                proxy = Proxy(line)
-                self.proxy_heap.pushToHeap(proxy)
+        for line in self.proxy_list:
+            print(line)
+            proxy = Proxy(line)
+            self.proxy_heap.pushToHeap(proxy)
 
     def decrement_and_check(self,index):
         self.proxy_heap[index].decrementCount()
@@ -94,7 +93,8 @@ class RotatingProxy():
         timeout = ClientTimeout(total=self.timeout)
 
         ### If a proxy list isn't specified, try a simple urlopen.
-        if self.proxy_list is None or not self.proxy_heap:
+        if self.proxy_list is None or len(self.proxy_heap) == 0:
+            print(self.proxy_list,self.proxy_heap)
             try:
                 with urllib.request.urlopen(url) as response:
                     mybytes = response.read()
