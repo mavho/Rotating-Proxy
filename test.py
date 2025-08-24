@@ -101,7 +101,7 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(1, len(res))
         self.assertIsNone(res[0])
 
-        mock_session.side_effect = TimeoutError("ERROR")
+        mock_session.side_effect = asyncio.TimeoutError("ERROR")
         # mock_session.get.return_value.__enter__.return_value = mock_reponse
 
         proxy_list = [

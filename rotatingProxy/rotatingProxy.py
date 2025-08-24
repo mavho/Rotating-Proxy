@@ -122,7 +122,7 @@ class RotatingProxy():
                     if response.content_type not in self.valid_content_types:
                         raise InvalidContentTypeError(response)
 
-                    html = await response.txt()
+                    html = await response.text()
                     
             ### Handle the errors that is thrown from session.get()
             except ClientConnectionError as e:
@@ -135,7 +135,7 @@ class RotatingProxy():
                 if top_proxy >= 0:
                     self.proxy_heap.pushToHeap(top_proxy)
                 print(e)
-            except TimeoutError as e:
+            except asyncio.TimeoutError as e:
                 top_proxy.decrementCount()
 
                 if top_proxy >= 0:
