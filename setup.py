@@ -5,5 +5,5 @@ setup(name='rotatingProxy',
     description='Helper class to go through proxy URLs. Uses a heap to keep track of request errors for those proxies.',
     author='Maverick',
     packages=['rotatingProxy'],
-    install_requires=["aiohttp"]
+    install_requires=["aiohttp","ua-generator"]
 )

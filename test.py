@@ -9,14 +9,6 @@ class ProxyTests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_class(self):
-        from rotatingProxy.rotatingProxy import Proxy
-        p = Proxy("asdf")
-
-        self.assertEqual(p.ip,"asdf")
-        self.assertEqual(p.count,1)
-        p.incrementCount()
-        self.assertEqual(p.count,2)
 
     def _test_make_req(self):
         async def get_html() -> list:
@@ -129,6 +121,24 @@ class ProxyTests(unittest.TestCase):
         
         res = loop.run_until_complete(getHtml())
         self.assertIsNone(res[0])
+
+class ProxyTest(unittest.TestCase):
+
+    def test_class(self):
+        from rotatingProxy.rotatingProxy import Proxy
+        p = Proxy("http://testproxy:90")
+
+        self.assertEqual(p.url,"http://testproxy:90")
+        self.assertEqual(p.count,1)
+        p.incrementCount()
+        self.assertEqual(p.count,2)
+
+    def test_header(self):
+        from rotatingProxy.rotatingProxy import Proxy
+        p = Proxy("http://testproxy:90")
+
+        p.generateHeader()
+        # print(p.header())
 
 
 class MaxHeapTest():
