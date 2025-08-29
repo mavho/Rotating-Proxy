@@ -2,6 +2,8 @@ import unittest
 from unittest.mock import patch,MagicMock,PropertyMock
 import asyncio
 
+from aiohttp import ClientConnectionError
+
 from rotatingProxy.rotatingProxy import RotatingProxy
 from rotatingProxy.heap import MaxHeap
 
@@ -64,7 +66,6 @@ class ProxyTests(unittest.TestCase):
         self,
         mock_session:MagicMock,
     ):
-        from aiohttp import ClientConnectionError
         async def get_html(proxy_list) -> list:
             """
             get URL w/o using the proxy
@@ -138,8 +139,7 @@ class ProxyTest(unittest.TestCase):
         p = Proxy("http://testproxy:90")
 
         p.generateHeader()
-        # print(p.header())
-
+        print(p.header)
 
 class MaxHeapTest():
     pass

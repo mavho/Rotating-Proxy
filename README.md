@@ -30,3 +30,7 @@ Each line has 1 IP:Port format.
 
 Use it in successive calls, heap state is stored. Proxies that are more successfull will be
 used more often.
+
+
+### Python version
+Minimum version bumped to 3.9 due to ua-agent integration.

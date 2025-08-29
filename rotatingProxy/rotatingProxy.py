@@ -8,9 +8,9 @@ from aiohttp import (
     ClientResponseError,
     ClientTimeout,
     ClientConnectionError,
-    ClientPayloadError
+    ClientPayloadError,
 )
-from aiohttp.client_exceptions import TooManyRedirects
+from aiohttp.client_exceptions import TooManyRedirects,InvalidURL
 
 from rotatingProxy.proxy import Proxy 
 import rotatingProxy.heap as HA
@@ -162,9 +162,17 @@ class RotatingProxy():
                     # self.proxy_heap.pushToHeap(top_proxy)
                     buffer.append(top_proxy)
                 print(f"{top_proxy.url},{e}")
+            except InvalidURL as e:
+                top_proxy.decrementCount()
+
+                if top_proxy >= 0:
+                    # self.proxy_heap.pushToHeap(top_proxy)
+                    buffer.append(top_proxy)
+                print(f"{top_proxy.url},{e}")
             except Exception as e:
                 print("ran into exception")
                 print(f"{top_proxy.url},{e}")
+                self.session.close()
                 raise e
             else:
                 top_proxy.incrementCount()

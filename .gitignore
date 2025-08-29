@@ -2,3 +2,5 @@ proxy_list.txt
 .vscode/*
 */__pycache__/*
 __pycache__/*
+.python-version
+RPENV
